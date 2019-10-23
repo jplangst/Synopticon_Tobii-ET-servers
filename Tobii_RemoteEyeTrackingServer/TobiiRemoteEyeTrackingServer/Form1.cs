@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+
+using System;
+using System.Threading.Tasks;
+using WampSharp.V2;
+using WampSharp.V2.Client;
+using WampSharp.V2.Fluent;
 
 using Tobii.Research;
 //using Tobii.Research.Addons;
 
-using WampSharp.V2;
-using WampSharp.V2.Client;
 using System.Collections.Concurrent;
+using System.Net;
 
 //Install-Package WampSharp.Default -Pre
 
@@ -68,6 +67,7 @@ namespace TobiiRemoteEyeTrackingServer
             catch (Exception exp)
             {
                 //do nothing
+                Console.Write(exp);
             }
         }
 
@@ -220,19 +220,61 @@ namespace TobiiRemoteEyeTrackingServer
         private IWampSubject WAMPSubject;
         private ConcurrentQueue<GazeDataEventArgs> GazeEventQueue = new ConcurrentQueue<GazeDataEventArgs>();
         private double[] CurrentPupilDiameters = {0, 0 };
-        private void StreamBtn_Click(object sender, EventArgs e)
+        async private void StreamBtn_Click(object sender, EventArgs e)
         {
             
             if (!IsStreamingToWAMP)
             {
+                
                 //maybe check if the connection before start wamp
-                string CrossbarAddress = "ws://" + CrossbarIPTextBox.Text + "/ws";
+                string CrossbarAddress = CrossbarIPTextBox.Text + "/ws";
                 string CrossbarRealm = RealmTextbox.Text;
-                DefaultWampChannelFactory channelFactory = new DefaultWampChannelFactory();
-                IWampChannel channel = channelFactory.CreateJsonChannel(CrossbarAddress, CrossbarRealm);
-                Task openTask = channel.Open();
-                openTask.Wait(5000);
+
+                //This was the old code, might have to do some kind of hybrid depending on the url written.
+                /*DefaultWampChannelFactory channelFactory = new DefaultWampChannelFactory();
+                IWampChannel channel = channelFactory.CreateJsonChannel("wss://syn.ife.no/crossbarproxy/ws", CrossbarRealm); //CrossbarAddress
+
+                channel.Open().Wait();
+                //Task openTask = channel.Open()
+                //openTask.Wait(5000);*/
+
+                //if (CrossbarAddress.Contains("wss://")){
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                //}
+                
+                WampChannelFactory factory = new WampChannelFactory();
+
+                IWampChannel channel = factory.ConnectToRealm(CrossbarRealm)
+                                              .WebSocketTransport(new Uri(CrossbarAddress+"/ws"))
+                                              .JsonSerialization()
+                                              .Build();
+
                 IWampRealmProxy realmProxy = channel.RealmProxy;
+
+                channel.RealmProxy.Monitor.ConnectionEstablished +=
+                    (sender_inner, arg) =>
+                    {
+                        Console.WriteLine("connected session with ID " + arg.SessionId);
+
+                        dynamic details = arg.WelcomeDetails.OriginalValue.Deserialize<dynamic>();
+
+                        Console.WriteLine("authenticated using method '{0}' and provider '{1}'", details.authmethod,
+                                          details.authprovider);
+
+                        Console.WriteLine("authenticated with authid '{0}' and authrole '{1}'", details.authid,
+                                          details.authrole);
+                    };
+
+                channel.RealmProxy.Monitor.ConnectionBroken +=
+                    (sender_inner, arg) =>
+                    {
+                        dynamic details = arg.Details.OriginalValue.Deserialize<dynamic>();
+                        Console.WriteLine("disconnected " + arg.Reason + " " + details.reason + details);
+                        Console.WriteLine("disconnected " + arg.Reason);
+                    };
+              
+                await channel.Open().ConfigureAwait(false);
+
                 WAMPSubject = realmProxy.Services.GetSubject("RETDataSample");
 
                 SelectedTracker.GazeDataReceived += HandleGazeData;
@@ -242,36 +284,40 @@ namespace TobiiRemoteEyeTrackingServer
                     {
                         try
                         {
-                            GazeDataEventArgs gazeEvent;
-                            GazeEventQueue.TryDequeue(out gazeEvent);
-                            float gazeX = 0;
-                            float gazeY = 0;
-                            if (gazeEvent.LeftEye.GazePoint.Validity == Validity.Valid &&
-                                gazeEvent.RightEye.GazePoint.Validity == Validity.Valid)
+                            while (GazeEventQueue.Any())
                             {
-                                gazeX = (gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.X + gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.X) / 2;
-                                gazeY = (gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.Y + gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.Y) / 2;
-                            }
-                            else if (gazeEvent.LeftEye.GazePoint.Validity == Validity.Valid)
-                            {
-                                gazeX = gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.X;
-                                gazeY = gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.Y;
-                            }
-                            else if(gazeEvent.RightEye.GazePoint.Validity == Validity.Valid)
-                            {
-                                gazeX = gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.X;
-                                gazeY = gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.Y;
-                            }
 
-                            if (gazeEvent.LeftEye.Pupil.PupilDiameter != -1 || gazeEvent.RightEye.Pupil.PupilDiameter != -1)
-                            {
-                                CurrentPupilDiameters[0] = Double.IsNaN(gazeEvent.LeftEye.Pupil.PupilDiameter) ? -1 : gazeEvent.LeftEye.Pupil.PupilDiameter;
-                                CurrentPupilDiameters[1] = Double.IsNaN(gazeEvent.RightEye.Pupil.PupilDiameter) ? -1 : gazeEvent.RightEye.Pupil.PupilDiameter;
-                            }
 
-                            WampEvent evt = new WampEvent();
-                            evt.Arguments = new object[] { SelectedTracker.SerialNumber,
-                            new object[] { CurrentPupilDiameters[0],
+                                GazeDataEventArgs gazeEvent;
+                                GazeEventQueue.TryDequeue(out gazeEvent);
+                                float gazeX = 0;
+                                float gazeY = 0;
+                                if (gazeEvent.LeftEye.GazePoint.Validity == Validity.Valid &&
+                                    gazeEvent.RightEye.GazePoint.Validity == Validity.Valid)
+                                {
+                                    gazeX = (gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.X + gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.X) / 2;
+                                    gazeY = (gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.Y + gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.Y) / 2;
+                                }
+                                else if (gazeEvent.LeftEye.GazePoint.Validity == Validity.Valid)
+                                {
+                                    gazeX = gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.X;
+                                    gazeY = gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.Y;
+                                }
+                                else if (gazeEvent.RightEye.GazePoint.Validity == Validity.Valid)
+                                {
+                                    gazeX = gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.X;
+                                    gazeY = gazeEvent.RightEye.GazePoint.PositionOnDisplayArea.Y;
+                                }
+
+                                if (gazeEvent.LeftEye.Pupil.PupilDiameter != -1 || gazeEvent.RightEye.Pupil.PupilDiameter != -1)
+                                {
+                                    CurrentPupilDiameters[0] = Double.IsNaN(gazeEvent.LeftEye.Pupil.PupilDiameter) ? -1 : gazeEvent.LeftEye.Pupil.PupilDiameter;
+                                    CurrentPupilDiameters[1] = Double.IsNaN(gazeEvent.RightEye.Pupil.PupilDiameter) ? -1 : gazeEvent.RightEye.Pupil.PupilDiameter;
+                                }
+
+                                WampEvent evt = new WampEvent();
+                                evt.Arguments = new object[] { SelectedTracker.SerialNumber,
+                                new object[] { CurrentPupilDiameters[0],
                                 gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.X,
                                 gazeEvent.LeftEye.GazePoint.PositionOnDisplayArea.Y,
                                 CurrentPupilDiameters[1],
@@ -284,24 +330,41 @@ namespace TobiiRemoteEyeTrackingServer
                                 gazeEvent.RightEye.GazeOrigin.PositionInUserCoordinates.Y,
                                 gazeEvent.RightEye.GazeOrigin.PositionInUserCoordinates.Z,
                                 gazeX, gazeY }
-                            };
-                            WAMPSubject.OnNext(evt);
+                                };
+                                WAMPSubject.OnNext(evt);
+                            }
                         }
                         catch (Exception exp)
                         {
                             //do nothing, skip
+                            Console.Write(exp);
                         }
                         
                     }
                 });
                 WAMPThread.Start();
-                StreamBtn.Text = "Stop";
+
+                if (StreamBtn.InvokeRequired)
+                {
+                    StreamBtn.BeginInvoke((MethodInvoker)delegate () { this.StreamBtn.Text = "Stop"; });
+                }
+                else
+                {
+                    StreamBtn.Text = "Stop";
+                }
             }
             else
             {
                 IsStreamingToWAMP = false;
                 SelectedTracker.GazeDataReceived -= HandleGazeData;
-                StreamBtn.Text = "Stream";
+                if (StreamBtn.InvokeRequired)
+                {
+                    StreamBtn.BeginInvoke((MethodInvoker)delegate () { this.StreamBtn.Text = "Stream"; });
+                }
+                else
+                {
+                    StreamBtn.Text = "Stream";
+                }
                 WAMPThread.Join();
             }
         }
@@ -318,7 +381,7 @@ namespace TobiiRemoteEyeTrackingServer
             }
             catch (Exception exp)
             {
-
+                Console.Write(exp);
             }
         }
 
@@ -355,6 +418,7 @@ namespace TobiiRemoteEyeTrackingServer
             catch (Exception exp)
             {
                 SelectedTracker = null;
+                Console.Write(exp);
             }
         }
 
@@ -368,6 +432,7 @@ namespace TobiiRemoteEyeTrackingServer
             catch (Exception exp)
             {
                 SelectedTracker = null;
+                Console.Write(exp);
             }
         }
 
@@ -391,6 +456,7 @@ namespace TobiiRemoteEyeTrackingServer
             catch (Exception exp)
             {
                 SelectedTracker = null;
+                Console.Write(exp);
             }
         }
 
@@ -409,6 +475,7 @@ namespace TobiiRemoteEyeTrackingServer
             }
             catch (Exception exp)
             {
+                Console.Write(exp);
             }
         }
 
@@ -427,6 +494,7 @@ namespace TobiiRemoteEyeTrackingServer
             }
             catch (Exception exp)
             {
+                Console.Write(exp);
             }
         }
     }

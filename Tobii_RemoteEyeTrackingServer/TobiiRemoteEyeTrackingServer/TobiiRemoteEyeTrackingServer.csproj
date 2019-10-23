@@ -59,21 +59,18 @@
       <HintPath>..\packages\Castle.Core.4.2.1\lib\net45\Castle.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Fleck, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Fleck.1.0.3\lib\net45\Fleck.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Fleck, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Fleck.1.1.0\lib\net45\Fleck.dll</HintPath>
     </Reference>
-    <Reference Include="MsgPack, Version=0.6.0.0, Culture=neutral, PublicKeyToken=a2625990d5dc0167, processorArchitecture=MSIL">
-      <HintPath>..\packages\MsgPack.Cli.0.6.2\lib\net45\MsgPack.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MsgPack, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a2625990d5dc0167, processorArchitecture=MSIL">
+      <HintPath>..\packages\MsgPack.Cli.1.0.1\lib\net45\MsgPack.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Msgpack, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Msgpack.0.1.10\lib\net45\Newtonsoft.Msgpack.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Msgpack, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Msgpack.0.1.11\lib\net45\Newtonsoft.Msgpack.dll</HintPath>
     </Reference>
     <Reference Include="SuperSocket.ClientEngine, Version=0.10.0.0, Culture=neutral, PublicKeyToken=ee9af13f57f00acc, processorArchitecture=MSIL">
       <HintPath>..\packages\SuperSocket.ClientEngine.Core.0.10.0\lib\net45\SuperSocket.ClientEngine.dll</HintPath>
@@ -131,36 +128,22 @@
       <HintPath>..\..\..\tobii\prosdk-addons-dotnet\source\Tobii.Research.Addons\bin\x64\Debug\Tobii.Research.Addons.dll</HintPath>
     </Reference>
     <Reference Include="WampSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.18.10.1\lib\net45\WampSharp.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="WampSharp.Default.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.Default.Client.18.10.1\lib\net45\WampSharp.Default.Client.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\WampSharp.19.8.2\lib\net45\WampSharp.dll</HintPath>
     </Reference>
     <Reference Include="WampSharp.Default.Router, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.Default.Router.18.10.1\lib\net45\WampSharp.Default.Router.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\WampSharp.Default.Router.19.8.2\lib\net45\WampSharp.Default.Router.dll</HintPath>
     </Reference>
     <Reference Include="WampSharp.Fleck, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.Fleck.18.10.1\lib\net45\WampSharp.Fleck.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\WampSharp.Fleck.19.8.2\lib\net45\WampSharp.Fleck.dll</HintPath>
     </Reference>
     <Reference Include="WampSharp.NewtonsoftJson, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.NewtonsoftJson.18.10.1\lib\net45\WampSharp.NewtonsoftJson.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\WampSharp.NewtonsoftJson.19.8.2\lib\net45\WampSharp.NewtonsoftJson.dll</HintPath>
     </Reference>
     <Reference Include="WampSharp.NewtonsoftMsgpack, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.NewtonsoftMsgpack.18.10.1\lib\net45\WampSharp.NewtonsoftMsgpack.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\WampSharp.NewtonsoftMsgpack.19.8.2\lib\net45\WampSharp.NewtonsoftMsgpack.dll</HintPath>
     </Reference>
-    <Reference Include="WampSharp.WebSocket4Net, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WampSharp.WebSocket4Net.18.10.1\lib\net45\WampSharp.WebSocket4Net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="WebSocket4Net, Version=0.15.2.11, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebSocket4Net.0.15.2\lib\net45\WebSocket4Net.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="WampSharp.WebSockets, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WampSharp.WebSockets.19.8.2\lib\net45\WampSharp.WebSockets.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
